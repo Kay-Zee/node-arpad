@@ -151,6 +151,31 @@ ELO.prototype.bothExpectedScores = function(player_1_rating, player_2_rating) {
 };
 
 /**
+ * Returns an array of anticipated scores for all players
+ *
+ * @param {Array} player_ratings The rating of player 1, e.g. 1200
+ * @return {Array} The anticipated scores, e.g. [0.25, 0.75]
+ */
+ELO.prototype.allExpectedScores = function(player_ratings) {
+
+  var expectedScores = [];
+
+  for (var i = 0; i < player_ratings.length; i++) {
+    var currentPlayer = player_ratings[i]
+    expectedScores[i] = 0
+    for (var j = 0; j < player_ratings.length; j++) {
+      if (i != j){
+        expectedScores[i] = expectedScores[i] + this.expectedScore(currentPlayer, player_ratings[j]);
+      }
+    }
+    expectedScores[i] = expectedScores[i] / (player_ratings.length-1)
+  }
+  
+
+  return expectedScores;
+};
+
+/**
  * The calculated new rating based on the expected outcone, actual outcome, and previous score
  *
  * @param {Number} expected_score The expected score, e.g. 0.25
@@ -214,6 +239,24 @@ ELO.prototype.newRatingIfTied = function(rating, opponent_rating) {
   var odds = this.expectedScore(rating, opponent_rating);
 
   return this.newRating(odds, OUTCOMES.tied, rating);
+};
+
+/**
+ * Calculates a new rating from an existing rating and opponents ratings from an array with position corresponding to rank
+ *
+ * @param {Array} ratings The existing rating of the player, e.g. 1200
+ * @return {Array} The new rating of the player, e.g. 1190
+ */
+ELO.prototype.newRatingsForAll = function(ratings) {
+  var odds = this.allExpectedScores(ratings);
+  var newRatings = [];
+  var numPlayers = ratings.length
+  for (var i = 0; i < numPlayers; i++) {
+    var outcome = (numPlayers-1-i)/(numPlayers-1)
+    newRatings[i] = this.newRating(odds[i], outcome, ratings[i]) 
+  }
+
+  return newRatings;
 };
 
 module.exports = ELO;
